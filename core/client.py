@@ -9,7 +9,7 @@ def recognize(frame_bytes: list[bytes], cam_id: int) -> dict:
     Retorna el JSON de respuesta o un dict de error.
     """
     files = {
-        f"frame_{i}": (f"frame_{i}.jpg", b, "image/jpeg")
+        f"frame_{i:03d}": (f"frame_{i:03d}.jpg", b, "image/jpeg")
         for i, b in enumerate(frame_bytes)
     }
     try:
@@ -21,7 +21,7 @@ def recognize(frame_bytes: list[bytes], cam_id: int) -> dict:
         r.raise_for_status()
         return r.json()
     except requests.exceptions.Timeout:
-        log("ERR", "Timeout — el backend tardó demasiado", cam_id)
+        log("ERR", "Timeout - el backend tardó demasiado", cam_id)
         return {"access": "ERROR", "liveness": "UNKNOWN", "person": "Timeout", "confidence": 0.0}
     except requests.exceptions.ConnectionError:
         log("ERR", "Sin conexión al backend", cam_id)

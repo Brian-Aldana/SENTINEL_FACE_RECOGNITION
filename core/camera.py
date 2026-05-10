@@ -57,13 +57,18 @@ def encode_frame(frame, quality: int = 85) -> bytes:
     return buf.tobytes()
 
 
+_cascade = None
+
 def detect_faces(frame) -> tuple[bool, list]:
-    cascade = cv2.CascadeClassifier(
-        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-    )
+    global _cascade
+    if _cascade is None:
+        _cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
+    
     gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray  = cv2.equalizeHist(gray)
-    faces = cascade.detectMultiScale(
+    faces = _cascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
         minNeighbors=5,

@@ -17,7 +17,7 @@ def camera_worker(cam_info: dict, stop_event: threading.Event):
     """
     idx       = cam_info["index"]
     label     = cam_info["label"]
-    win_title = f"Sentinel Face — {label}"
+    win_title = f"Sentinel Face - {label}"
 
     log("CAM", f"Abriendo {label}...", idx)
 
@@ -34,7 +34,7 @@ def camera_worker(cam_info: dict, stop_event: threading.Event):
     last_time      = 0.0
     face_stable    = 0
     collecting     = False
-    collected      = []
+    raw_frames     = []
 
     cv2.namedWindow(win_title, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(win_title, config.CAP_WIDTH, config.CAP_HEIGHT)
@@ -58,24 +58,25 @@ def camera_worker(cam_info: dict, stop_event: threading.Event):
             if face_stable == 0 and not collecting:
                 last_faces = []
 
-        auto_trigger  = face_stable >= config.FACE_STABLE_THRESHOLD and (now - last_time) > config.COOLDOWN
+        auto_trigger  = False # face_stable >= config.FACE_STABLE_THRESHOLD and (now - last_time) > config.COOLDOWN
         key           = cv2.waitKey(1) & 0xFF
         space_trigger = key == 32 and face_found and (now - last_time) > 1.0
 
         if (auto_trigger or space_trigger) and not collecting:
             collecting  = True
-            collected   = []
+            raw_frames  = []
             face_stable = 0
             log("INFO", f"Capturando {config.N_FRAMES} frames...", idx)
 
         if collecting:
-            collected.append(encode_frame(frame, config.JPEG_QUALITY))
-            progress = len(collected) / config.N_FRAMES
+            raw_frames.append(frame.copy())
+            progress = len(raw_frames) / config.N_FRAMES
 
-            if len(collected) >= config.N_FRAMES:
+            if len(raw_frames) >= config.N_FRAMES:
                 collecting  = False
                 last_time   = now
 
+                collected   = [encode_frame(f, config.JPEG_QUALITY) for f in raw_frames]
                 result      = recognize(collected, idx)
                 last_result = result
 
@@ -136,14 +137,14 @@ def select_cameras(cameras: list[dict]) -> list[dict]:
 
 
 def main():
-    print("\n" + "═" * 52)
-    print("  Sentinel Face — Cliente de reconocimiento facial")
-    print("═" * 52)
+    print("\n" + "=" * 52)
+    print("  Sentinel Face - Cliente de reconocimiento facial")
+    print("=" * 52)
     print(f"  Backend : {config.API_URL}")
     print(f"  Frames  : {config.N_FRAMES} por reconocimiento")
     print(f"  Cooldown: {config.COOLDOWN}s  |  Estabilidad: {config.FACE_STABLE_THRESHOLD} frames")
     print( "  Teclas  : ESPACIO = forzar reconocimiento  |  Q = salir")
-    print("═" * 52 + "\n")
+    print("=" * 52 + "\n")
 
     log("INFO", "Detectando cámaras disponibles...")
     cameras = list_cameras(max_index=10)
