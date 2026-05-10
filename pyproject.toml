@@ -1,0 +1,12 @@
+[project]
+name = "sentinel-face-recognition"
+version = "1.0.0"
+description = "Cliente de reconocimiento facial para el sistema Sentinel Face"
+requires-python = ">=3.10"
+dependencies = [
+    "opencv-python>=4.9.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "colorama>=0.4.6",
+    "numpy>=1.24.0",
+]
